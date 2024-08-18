@@ -1,0 +1,35 @@
+GET transactions/_search
+
+POST _reindex
+{
+  "source": {
+    "index": "transactions"
+  },
+  "dest": {
+    "index": "transaction_part1"
+  },
+  "script":{
+    "source": """
+     ctx._source.transactionDate = new Date(ctx._source.transactionDate).toString();
+    """
+   }
+}
+
+GET transaction_part1/_search
+
+POST _reindex
+{
+  "source": {
+    "index": "transactions"
+  },
+  "dest": {
+    "index": "transaction_part2"
+  },
+  "script": {
+    "source": """
+      Instant instant = Instant.ofEpochMilli(ctx._source.transactionDate);
+      ctx._source.transactionDate = instant.atZone(ZoneId.of('UTC')).format(DateTimeFormatter.ISO_INSTANT);
+    """
+  }
+}
+
